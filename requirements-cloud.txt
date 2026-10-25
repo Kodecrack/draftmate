@@ -1,0 +1,10 @@
+fastapi
+uvicorn
+python-multipart
+openai
+python-dotenv
+rank-bm25
+python-docx
+requests
+pypdf
+python-pptx
