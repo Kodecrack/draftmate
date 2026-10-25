@@ -1,0 +1,6 @@
+.env
+venv/
+venv312/
+_pycache_/
+*.pyc
+test_llm.py

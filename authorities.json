@@ -1,0 +1,17 @@
+{
+ "cases": [
+  {"name":"Kesavananda Bharati v. State of Kerala","cite":"AIR 1973 SC 1461","key":"kesavananda"},
+  {"name":"Maneka Gandhi v. Union of India","cite":"AIR 1978 SC 597","key":"maneka"},
+  {"name":"K.S. Puttaswamy v. Union of India","cite":"(2017) 10 SCC 1","key":"puttaswamy"},
+  {"name":"Vishaka v. State of Rajasthan","cite":"AIR 1997 SC 3011","key":"vishaka"},
+  {"name":"Shreya Singhal v. Union of India","cite":"(2015) 5 SCC 1","key":"shreya"},
+  {"name":"Lalita Kumari v. Govt. of U.P.","cite":"(2014) 2 SCC 1","key":"lalita"},
+  {"name":"Arnesh Kumar v. State of Bihar","cite":"(2014) 8 SCC 273","key":"arnesh"}
+ ],
+ "sections": {
+  "Transfer of Property Act": ["105","106","111"],
+  "Indian Contract Act": ["10","73","74"],
+  "Negotiable Instruments Act": ["138"],
+  "Code of Civil Procedure": ["9","80"]
+ }
+}

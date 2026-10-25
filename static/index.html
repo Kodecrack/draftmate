@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>DraftMate – Legal Drafting Studio</title>
+<style>
+:root{--bg:#faf9f5;--side:#f0eee6;--card:#fff;--ln:#e4e1d6;--tx:#1f1e1d;--mu:#6f6e68;--ac:#c96442;--acx:#b4573a;--hv:#e9e6db;--paper:#fff;--ptx:#1f1e1d;--okc:#2f7a4f;--amc:#a06a0f;--rdc:#b3372d;--sh:0 1px 2px #0000000d,0 6px 20px #0000000a}
+[data-theme=dark]{--bg:#262624;--side:#1f1e1d;--card:#30302e;--ln:#3d3d3a;--tx:#f0efe9;--mu:#a09e95;--ac:#d97757;--acx:#e38d70;--hv:#383835;--paper:#f5f3ec;--okc:#7bd1a0;--amc:#e0b25a;--rdc:#f08a80;--sh:0 1px 2px #0006,0 8px 24px #0005}
+*{box-sizing:border-box;font-family:system-ui,"Segoe UI",Inter,Arial,sans-serif}
+body{margin:0;background:var(--bg);color:var(--tx)}
+header{display:flex;align-items:center;gap:10px;padding:0 20px;height:52px;border-bottom:1px solid var(--ln)}
+header b{font:500 21px Georgia,serif}.mu{color:var(--mu);font-size:12px}.sp{flex:1}
+.app{display:grid;grid-template-columns:250px 1fr 310px;height:calc(100vh - 53px)}
+aside{padding:16px;overflow-y:auto;background:var(--side);border-right:1px solid var(--ln)}aside.r{background:var(--bg);border:0;border-left:1px solid var(--ln)}
+main{overflow-y:auto;padding:18px 26px}
+h3{margin:0 0 8px;font-size:12px;font-weight:600;color:var(--mu)}
+input,textarea,select,button{padding:8px 11px;border:1px solid var(--ln);border-radius:8px;font-size:14px;background:var(--card);color:var(--tx);outline:0}
+input:focus,textarea:focus{border-color:var(--ac)}textarea,#q,#cmd{width:100%}
+button{display:inline-flex;align-items:center;justify-content:center;gap:7px;background:var(--ac);color:#fff;border:0;font-weight:500;cursor:pointer}button:hover{background:var(--acx)}
+button.g{background:transparent;color:var(--tx);border:1px solid var(--ln)}button.g:hover{background:var(--hv)}
+.i{width:16px;height:16px;flex:none}a{color:var(--ac)}
+.row{display:flex;gap:8px;align-items:center}
+summary{cursor:pointer;font-size:12px;font-weight:600;color:var(--mu);padding:7px 0;list-style:none}summary::before{content:"▸ "}details[open]>summary::before{content:"▾ "}
+.it{padding:6px 10px;border-radius:8px;cursor:pointer;font-size:14px}.it:hover{background:var(--hv)}.it.on{background:var(--hv);font-weight:600}
+.compose{background:var(--card);border:1px solid var(--ln);border-radius:14px;padding:12px;box-shadow:var(--sh)}
+.compose textarea{border:0;resize:none;padding:4px;font-size:15px}
+.cbar{display:flex;gap:8px;align-items:center;flex-wrap:wrap;margin-top:6px}
+.chip{font-size:12px;padding:4px 10px;border-radius:999px;background:var(--hv)}
+.meter{width:70px;height:6px;background:var(--hv);border-radius:4px}.meter div{height:6px;width:0;background:var(--ac);border-radius:4px;transition:width .3s}
+.doc{margin-top:16px}.doc.empty .tb,.doc.empty #paper,.doc.empty .refine{display:none}.doc:not(.empty) #welcome{display:none}
+#welcome{text-align:center;padding:30px 0}#welcome h1{font:500 30px Georgia,serif;margin:0 0 6px}
+.cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(170px,1fr));gap:10px;margin:20px 0;text-align:left}
+.card{border:1px solid var(--ln);background:var(--card);border-radius:12px;padding:12px;cursor:pointer;display:flex;flex-direction:column;gap:3px}.card:hover{border-color:var(--ac)}
+.tb{display:flex;gap:8px;align-items:center;position:sticky;top:-18px;background:var(--bg);padding:8px 0;z-index:2}
+#paper{background:var(--paper);color:var(--ptx);font:15px/1.8 "Times New Roman",Georgia,serif;white-space:pre-wrap;max-width:794px;min-height:520px;margin:6px auto;padding:56px 64px;border:1px solid var(--ln);border-radius:6px;box-shadow:var(--sh);outline:0;position:relative;overflow:hidden}
+.shim::after{content:"";position:absolute;inset:0;background:linear-gradient(100deg,transparent 30%,#c9644222 50%,transparent 70%);background-size:200% 100%;animation:sh 1.3s infinite}
+@keyframes sh{from{background-position:200% 0}to{background-position:-200% 0}}
+.typing::after{content:"▌"}
+.refine{max-width:794px;margin:10px auto;display:flex;gap:8px}
+.rec{background:var(--ac)!important;color:#fff!important;animation:pl 1s infinite}@keyframes pl{50%{opacity:.55}}
+.cite{cursor:pointer;border-radius:2px}
+.cite.verified{border-bottom:2px solid #3f8f5f;background:#3f8f5f1f}.cite.partial{border-bottom:2px solid #c98a1b;background:#c98a1b26}.cite.unverified{text-decoration:underline wavy #c2453b;background:#c2453b1f}
+.tag{padding:2px 9px;border-radius:999px;font-size:11px;font-weight:600}
+.tag.verified{color:var(--okc);background:color-mix(in srgb,var(--okc) 16%,transparent)}.tag.partial{color:var(--amc);background:color-mix(in srgb,var(--amc) 16%,transparent)}.tag.unverified{color:var(--rdc);background:color-mix(in srgb,var(--rdc) 16%,transparent)}
+#trust{display:none;align-items:center;gap:8px;border:1px solid var(--ln);background:var(--card);border-radius:999px;padding:4px 12px;font-size:13px}
+#score{min-width:34px}
+#seg{width:46px;height:5px;border-radius:3px;display:flex;overflow:hidden;background:var(--hv)}#seg div{transition:width .6s}
+::-webkit-scrollbar{width:8px}::-webkit-scrollbar-thumb{background:var(--ln);border-radius:4px}
+#paper b{font-weight:700}.h{font-weight:700}.h1{font-size:1.25em;display:inline-block;width:100%;text-align:center;letter-spacing:.04em}.h2{font-size:1.1em}
+dialog{width:440px;max-width:92vw;background:var(--card);color:var(--tx);border:1px solid var(--ln);border-radius:14px;padding:20px}dialog::backdrop{background:#0006}
+dialog input:not([type=checkbox]),dialog select{width:100%;margin:3px 0 8px}dialog label{display:block}
+.banner{background:color-mix(in srgb,var(--amc) 15%,transparent);border:1px solid var(--amc);border-radius:10px;padding:8px 12px;font-size:13px;margin-bottom:12px}
+.tab.on,.tog.on{background:var(--hv);font-weight:600}.cc{border:1px solid var(--ln);background:var(--card);border-radius:10px;padding:10px;margin-bottom:8px;font-size:13px}.cc p{line-height:1.45}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.ri{padding:7px 0;border-bottom:1px solid var(--ln);font-size:13px}.cc h3{color:var(--tx);font-size:14px;margin:0 0 6px}
+.pp{background:var(--paper);color:var(--ptx);font:15px/1.8 "Times New Roman",Georgia,serif;white-space:pre-wrap;padding:40px 48px;border:1px solid var(--ln);border-radius:6px;box-shadow:var(--sh)}
+.hi{display:flex;justify-content:space-between;align-items:center;gap:8px}.x{color:var(--mu);padding:0 6px}.x:hover{color:var(--rdc)}
+</style></head><body>
+<header><span data-ic="scale" style="color:var(--ac)"></span><b>DraftMate</b><span class="mu">Legal Drafting Studio</span><span class="sp"></span>
+<select id="model" title="Model"></select><button class="g" onclick="openSet()" data-ic="sliders">AI settings</button><button class="g" id="theme" onclick="toggleTheme()" title="Light / dark"></button></header>
+<div class="app">
+ <aside><details><summary>History</summary><div id="hist"></div></details><h3 style="margin-top:14px">Skills</h3><input id="q" placeholder="Search skills…" style="margin-bottom:8px"><div id="skills"></div>
+  <details style="margin-top:10px"><summary>Templates</summary><div id="tpl"></div></details></aside>
+ <main>
+  <div id="demo" class="banner" style="display:none">No AI is connected, so every draft is the same sample text. <a href="#" onclick="openSet();return false">Connect an AI</a></div>
+  <section class="compose">
+   <textarea id="ins" rows="2" placeholder="Describe what you want to draft, e.g. a rent default notice for a Lucknow flat, Rs. 15,000 per month, 3 months unpaid…"></textarea>
+   <div class="cbar">
+    <button class="g" onclick="$('file').click()" data-ic="clip" title="Upload a reference document so the draft copies its style">Reference</button><input type="file" id="file" accept=".pdf,.docx,.txt,.md" hidden>
+    <span class="chip" id="chip">Skill: Legal Notice</span><span class="sp"></span>
+    <span class="mu" title="Prompt strength">Prompt</span><div class="meter"><div id="mfill"></div></div><span id="mtxt" class="mu">0%</span>
+    <button class="g" onclick="improve()" data-ic="trend" title="Rewrite the request to be more specific">Improve</button>
+    <button class="g micb" onclick="mic()" data-ic="mic" title="Speak"></button>
+    <button onclick="gen()" data-ic="send">Generate</button>
+   </div>
+   <div id="tips" class="mu" style="margin-top:6px"></div><div id="refinfo" class="mu"></div>
+  </section>
+    <section id="toolview" style="display:none">
+ <div class="compose"><h1 id="ttitle" style="font:500 24px Georgia,serif;margin:4px 0"></h1><div id="tdesc" class="mu" style="margin-bottom:12px"></div>
+  <div class="row" style="flex-wrap:wrap"><button class="g" onclick="$('tfile').click()" data-ic="clip">Choose file</button><input type="file" id="tfile" hidden accept=".pdf,.pptx,.docx,.txt,.md,.png,.jpg,.jpeg,.webp">
+   <span id="tname" class="mu">PDF, PPTX, DOCX, TXT or image</span><span class="sp"></span><select id="topt"></select><button id="trun" onclick="runTool()"></button></div>
+  <textarea id="tpaste" rows="3" placeholder="…or paste text here" style="margin-top:10px"></textarea></div>
+ <div id="tout" style="margin-top:14px"></div>
+ <div id="tact" class="row" style="margin-top:10px;display:none"><button class="g" onclick="toolToDraft()">Use as draft</button><button class="g" onclick="dl(TRES,'result.docx')" data-ic="down">Export .docx</button></div>
+</section>
+<div class="doc empty">
+   <div id="welcome"><h1>What are we drafting today?</h1><div class="mu">Start from a template, pick a skill on the left, or describe it above.</div>
+    <div class="cards" id="cards"></div><button class="g" onclick="demo()" data-ic="play">Show me how this works</button></div>
+   <div class="tb"><button onclick="ver()" data-ic="shield">Verify citations</button><button class="g" onclick="undo()" data-ic="undo">Undo</button><button class="g" onclick="exp()" data-ic="down">Export .docx</button><span class="sp"></span><span id="trust" title="Share of citations confirmed against sources"><span class="mu">Trust</span><b id="score">0%</b><span id="seg"></span></span><span id="wc" class="mu"></span></div>
+   <div id="paper" contenteditable="true" spellcheck="false"></div>
+   <div class="refine"><input id="cmd" placeholder="Refine: “make clause 2 shorter”, “more formal”, “verify”, “export”…" onkeydown="if(event.key=='Enter')typed()">
+    <button class="g micb" onclick="mic()" data-ic="mic" title="Speak"></button><button onclick="typed()">Apply</button></div>
+   <div id="log" class="mu" style="max-width:794px;margin:0 auto"></div>
+  </div>
+ </main>
+ <aside class="r">
+ <div class="row" style="margin-bottom:12px"><button class="g tab on" id="t1" onclick="tab(1)" style="flex:1">Citations</button><button class="g tab" id="t2" onclick="tab(2)" style="flex:1">Similar cases</button></div>
+ <div id="p1"><div id="cnt" class="mu" style="margin-bottom:8px"></div><div id="list" class="mu">Verify a draft to inspect its citations.</div><div id="detail"></div>
+  <p class="mu" style="margin-top:20px">Checked against a local authority database and a live Indian Kanoon lookup. Drafts go to the AI provider configured on this server. Review all output before filing.</p></div>
+ <div id="p2" style="display:none"><button onclick="findCases()" style="width:100%">Find similar cases</button>
+  <div class="row" style="margin:10px 0"><button class="g tog on" id="g1" onclick="side('supporting')" style="flex:1">Supporting</button><button class="g tog" id="g2" onclick="side('adverse')" style="flex:1">Adverse</button></div>
+  <div id="cases" class="mu">Searches your case file for real cases similar to this draft, including ones the other side could cite.</div></div>
+</aside>
+</div>
+<dialog id="set"><h3 style="color:var(--tx);font-size:16px;margin:0 0 6px">AI settings</h3>
+<div class="mu" style="margin-bottom:12px">Add one or more AI providers. Every model you add appears in the dropdown at the top.</div>
+<label class="mu">Provider</label><select id="pre"></select>
+<label class="mu">Name</label><input id="pname"><label class="mu">Base URL</label><input id="purl">
+<label class="mu">API key (not needed for Ollama)</label><input id="pkey" type="password" placeholder="paste your key">
+<label class="mu">Models, comma separated (edit to match your provider's current names)</label><input id="pmodels">
+<label class="mu"><input type="checkbox" id="premember" checked> Remember on this device (saved in this browser, in plain text)</label>
+<div class="row" style="margin-top:10px"><button onclick="saveProv()">Save and test</button><button class="g" onclick="$('set').close()">Close</button></div>
+<div id="pmsg" class="mu" style="margin-top:8px"></div><h3 style="margin-top:16px">Connected</h3><div id="conn"></div></dialog>
+<script>
+const $=id=>document.getElementById(id),paper=$("paper"),doc=document.querySelector(".doc");
+const ic={scale:'<path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="m2 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><path d="M7 21h10"/><path d="M12 3v18"/><path d="M3 7h2c2 0 5-1 7-2 2 1 5 2 7 2h2"/>',
+shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
+mic:'<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/>',
+down:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
+undo:'<path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>',check:'<polyline points="20 6 9 17 4 12"/>',play:'<polygon points="6 3 20 12 6 21 6 3"/>',
+sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2m-7.07-2.93 1.41-1.41M17.66 6.34l1.41-1.41M2 12h2M20 12h2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41"/>',moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
+clip:'<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
+send:'<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>',sliders:'<line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/>',trend:'<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>'};
+const I=n=>`<svg class="i" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">${ic[n]}</svg>`;
+document.querySelectorAll("[data-ic]").forEach(e=>e.insertAdjacentHTML("afterbegin",I(e.dataset.ic)));
+const esc=s=>s.replace(/&/g,"&amp;").replace(/</g,"&lt;").replace(/>/g,"&gt;");
+const log=m=>$("log").textContent=m;
+const post=(u,b)=>fetch(u,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(b)}).then(async r=>{if(!r.ok)throw new Error(r.status+" "+(await r.text()).slice(0,150));return r.json()});
+const P=(u,b)=>post(u,{...b,model:$("model").value});
+window.addEventListener("unhandledrejection",e=>log("❌ "+(e.reason&&e.reason.message||e.reason)));
+function render(md){return md.split("\n").map(l=>{const m=l.match(/^(#{1,3})\s+(.*)$/),e=esc(m?m[2]:l).replace(/\*\*(.+?)\*\*/g,"<b>$1</b>");return m?`<span class="h h${m[1].length}" data-h="${m[1].length}">${e}</span>`:e}).join("\n")}
+const setPaper=md=>{paper.innerHTML=render(md)};
+function getDraft(){const c=paper.cloneNode(true);c.removeAttribute("id");c.style.cssText="position:absolute;left:-9999px;width:700px;white-space:pre-wrap";
+ c.querySelectorAll("b,strong").forEach(e=>e.replaceWith("**"+e.textContent+"**"));c.querySelectorAll("[data-h]").forEach(e=>e.replaceWith("#".repeat(+e.dataset.h)+" "+e.textContent));
+ document.body.appendChild(c);const t=c.innerText.replace(/\u00a0/g," ");c.remove();return t}
+const LS={get:k=>{try{return localStorage.getItem(k)}catch(e){return null}},set:(k,v)=>{try{localStorage.setItem(k,v)}catch(e){}}};
+let skill="Legal Notice",all=[],hist=[],RES=[],MISS=[];
+paper.addEventListener("paste",e=>{e.preventDefault();document.execCommand("insertText",false,e.clipboardData.getData("text/plain"))});
+paper.addEventListener("input",sync);
+paper.onclick=e=>{const c=e.target.closest(".cite");if(c)show(+c.dataset.i)};
+function sync(){clearTimeout(window.snapT);window.snapT=setTimeout(()=>window.snap&&snap(),800);const t=getDraft().trim();doc.classList.toggle("empty",!t&&!paper.classList.contains("shim")&&!paper.classList.contains("typing"));$("wc").textContent=t?t.split(/\s+/).length+" words":""}
+
+
+// ---- skills library (grouped) + templates ----
+const CAT={"Drafting":["Legal Notice","Contract Drafting","Petition Drafting","NDA Drafting","Employment Agreement","Reply Drafting"],"Review":["Contract Review","Redlining","Clause Analysis","Due Diligence","Summarise Document"],"Research":["Case Analysis","Case Law Research","Statutory Research","Legal Opinion","Issue Spotting"],"Plain language & study":["Simplify Legal Language","Legal Translation","IRAC Practice"]};
+const TPL=[
+{n:"Rent Agreement",s:"Contract Drafting",p:"Draft an 11-month residential rent agreement between [Landlord Name] and [Tenant Name] for [Address], monthly rent Rs. [Amount], security deposit Rs. [Amount], under the Indian Contract Act, 1872."},
+{n:"Bail Application",s:"Petition Drafting",p:"Draft a regular bail application for [Accused Name] in FIR No. [No.] of [Year], P.S. [Station], under Sections [Sections]. Include grounds for bail and prayer."},
+{n:"Consumer Legal Notice",s:"Legal Notice",p:"Draft a consumer legal notice from [Name] to [Company] for [defective product/deficient service] bought on [Date] for Rs. [Amount], demanding a refund within 15 days."},
+{n:"Writ Petition (Art. 226)",s:"Petition Drafting",p:"Draft a writ petition under Article 226 of the Constitution before the High Court of [State] by [Petitioner] against [Respondent] challenging [Order/Action]. Include facts, grounds and prayer."},
+{n:"Rent Default Notice",s:"Legal Notice",p:"Draft a legal notice for non-payment of rent under the Transfer of Property Act, 1882."}];
+$("tpl").innerHTML=TPL.map((t,i)=>`<div class="it" onclick="useTpl(${i})">${t.n}</div>`).join("");
+$("cards").innerHTML=TPL.map((t,i)=>`<div class="card" onclick="useTpl(${i})"><b>${t.n}</b><span class="mu">${t.s}</span></div>`).join("");
+function useTpl(i){pick(TPL[i].s);$("ins").value=TPL[i].p;meter();$("ins").focus()}
+async function demo(){useTpl(4);await gen();await ver()}
+fetch("/api/skills").then(r=>r.json()).then(l=>{all=l;draw()});
+const OPEN=new Set(["Drafting"]);
+function tg(n,o){if(!$("q").value)o?OPEN.add(n):OPEN.delete(n)}
+function draw(){const f=$("q").value.toLowerCase(),used=new Set();
+ const grp=(n,list)=>{list=list.filter(s=>all.includes(s)&&s.toLowerCase().includes(f));list.forEach(s=>used.add(s));
+  return list.length?`<details ${f||OPEN.has(n)?"open":""} ontoggle="tg('${n}',this.open)"><summary>${n}</summary>${list.map(s=>`<div class="it ${s==skill?"on":""}" data-s="${s}" onclick="pick('${s}')">${s}</div>`).join("")}</details>`:""};
+ let h=Object.entries(CAT).map(([n,l])=>grp(n,l)).join("");h+=grp("More",all.filter(s=>!used.has(s)));$("skills").innerHTML=h;addTools()}
+function pick(s){closeTool();skill=s;$("chip").textContent="Skill: "+s;document.querySelectorAll("#skills .it").forEach(e=>e.classList.toggle("on",e.dataset.s==s))}
+$("q").oninput=draw;
+
+// ---- prompt strength meter + improver ----
+function meter(){const t=$("ins").value,w=t.trim().split(/\s+/).filter(Boolean).length;
+ const C=[["parties",/\b(between|from|against|by|for)\b.{0,60}\b(and|to|vs?\.?)\b|\[[^\]]*name[^\]]*\]/i],["court or law",/(high court|supreme court|district|tribunal|act,?\s*\d{4}|article\s*\d+|section\s*\d+|state of)/i],["amount or dates",/(rs\.?|₹|\d{4,}|\d+\s*(days|months|years))/i],["relief or demand",/(demand|refund|evict|bail|prayer|damages|restrain|terminat|compensat|quash|seek)/i],["more detail",{test:()=>w>=14}]];
+ MISS=C.filter(([n,r])=>!r.test(t)).map(x=>x[0]);const pct=(C.length-MISS.length)*100/C.length;
+ $("mfill").style.width=pct+"%";$("mtxt").textContent=Math.round(pct)+"%";
+ $("tips").textContent=t.trim()?(MISS.length?"Add: "+MISS.join(", "):"Specific enough. Ready to generate."):""}
+$("ins").oninput=meter;
+async function improve(){if(!$("ins").value.trim())return log("Write a short request first.");meter();log("Improving prompt…");
+ try{$("ins").value=(await P("/api/improve",{instruction:$("ins").value,missing:MISS})).instruction;meter();log("Prompt improved. Fill the [placeholders].")}catch(e){log("❌ "+e.message)}}
+
+// ---- upload reference ----
+$("file").onchange=async e=>{const f=e.target.files[0];if(!f)return;const fd=new FormData();fd.append("file",f);$("refinfo").textContent="Reading "+f.name+"…";
+ try{const r=await (await fetch("/api/upload",{method:"POST",body:fd})).json();$("refinfo").dataset.base=`Reference: ${f.name} · ${r.chunks} chunks indexed · style learned`;$("refinfo").title=r.style;$("refinfo").textContent=$("refinfo").dataset.base}
+ catch(e){$("refinfo").textContent="❌ could not read that file"}};
+
+// ---- generate (shimmer + typewriter) / edit ----
+const setDraft=t=>{SRC="draft";hist.push(getDraft());setPaper(t);clearMarks();sync()};
+function clearMarks(){RES=[];$("trust").style.display="none";$("cnt").textContent="";$("list").textContent="Verify a draft to inspect its citations.";$("detail").innerHTML=""}
+function undo(){if(hist.length){setPaper(hist.pop());clearMarks();sync()}}
+async function type(t){paper.classList.add("typing");for(let i=0;i<t.length;i+=12){let s=t.slice(0,i+12);if((s.match(/\*\*/g)||[]).length%2)s+="**";setPaper(s);await new Promise(r=>setTimeout(r,12))}setPaper(t);paper.classList.remove("typing");sync()}
+async function gen(){if(!$("ins").value.trim())return log("Describe what to draft first, or pick a template.");
+ hist.push(getDraft());CUR=null;clearMarks();paper.innerHTML="";paper.classList.add("shim");sync();log("Drafting…");
+ try{const r=await P("/api/generate",{skill,instruction:$("ins").value});paper.classList.remove("shim");await type(r.draft);
+  const {full,sent}=r.tokens;if(full)$("refinfo").textContent=($("refinfo").dataset.base||"")+` · sent ~${sent} of ~${full} tokens (${Math.round(100-sent*100/full)}% saved)`;
+  log($("model").value=="demo"?"Demo mode: sample text only. Connect an AI in AI settings.":"Draft ready. Click Verify citations.")}catch(e){paper.classList.remove("shim");sync();log("❌ "+e.message)}}
+
+// ---- verification: inline marks, trust score, inspector ----
+async function ver(){if(!getDraft().trim())return log("Nothing to verify yet.");try{const {results}=await post("/api/verify",{text:getDraft()});RES=results;mark();list();score()}catch(e){log("❌ "+e.message)}}
+function mark(){let h=render(getDraft());RES.forEach((r,i)=>{const c=esc(r.cite);h=h.split(c).join(`<span class="cite ${r.status}" data-i="${i}">${c}</span>`)});paper.innerHTML=h}
+function list(){tab(1);$("list").innerHTML=RES.length?RES.map((r,i)=>`<div class="it" onclick="show(${i})"><span class="tag ${r.status}">${r.status}</span> ${esc(r.cite)}</div>`).join(""):"No citations found."}
+function score(){const n=s=>RES.filter(r=>r.status==s).length,v=n("verified"),p=n("partial"),u=n("unverified"),t=RES.length;
+ if(!t){$("trust").style.display="none";return log("No citations found in this draft.")}
+ const pct=Math.round((v+p/2)*100/t);$("trust").style.display="inline-flex";
+ $("seg").innerHTML=[[v,"#3f8f5f"],[p,"#c98a1b"],[u,"#c2453b"]].map(([k,c])=>`<div style="width:${k*100/t}%;background:${c}"></div>`).join("");
+ $("cnt").textContent=`${v} verified · ${p} partial · ${u} unverified`;
+ const t0=performance.now();(function f(now){const k=Math.min((now-t0)/900,1);$("score").textContent=Math.round(pct*k)+"%";if(k<1)requestAnimationFrame(f)})(t0)}
+async function show(i){const r=RES[i];
+ $("detail").innerHTML=`<h3 style="margin-top:16px;color:var(--tx);font-size:14px">${esc(r.cite)}</h3><span class="tag ${r.status}">${r.status}</span><p class="mu">${esc(r.note)}</p>`+(r.fix?`<button onclick="applyFix(${i})">${I("check")} Insert correct case name</button>`:"")+`<div id="snip" class="mu" style="margin-top:8px">Looking up Indian Kanoon…</div><p><a href="${r.link}" target="_blank">Open source</a></p>`;
+ const s=await fetch("/api/snippet?cite="+encodeURIComponent(r.cite)).then(x=>x.json()).catch(()=>({}));
+ if($("snip"))$("snip").innerHTML=s.title?`<b>${esc(s.title)}</b><br>${esc(s.snippet)}`:"No live snippet found. Use the source link to check manually."}
+function applyFix(i){const f=RES[i].fix,t=getDraft();if(!t.includes(f.old))return log("Draft changed. Verify again.");
+ hist.push(t);setPaper(t.replace(f.old,f.new));log("Case name corrected.");ver()}
+
+// ---- export + voice/command ----
+async function exp(){const r=await fetch("/api/export",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({draft:getDraft()})});
+ const a=document.createElement("a");a.href=URL.createObjectURL(await r.blob());a.download="draft.docx";a.click()}
+let rec,parts=[];const recUi=on=>document.querySelectorAll(".micb").forEach(b=>b.classList.toggle("rec",on));
+let WH=true;
+async function mic(){
+ if(rec&&rec.state=="recording"){rec.stop();return}
+ if(!WH)return browserMic();
+ try{const s=await navigator.mediaDevices.getUserMedia({audio:true});rec=new MediaRecorder(s);parts=[];
+ rec.ondataavailable=e=>parts.push(e.data);
+ rec.onstop=async()=>{s.getTracks().forEach(t=>t.stop());recUi(false);log("Transcribing…");
+  const fd=new FormData();fd.append("audio",new Blob(parts),"v.webm");
+  try{const r=await (await fetch("/api/transcribe",{method:"POST",body:fd})).json();if(r.error){WH=false;log("❌ "+r.error+" | Voice now uses the browser: click the mic again.");return}log("Heard: “"+r.text+"”");typed(r.text)}catch(e){log("❌ voice failed: "+e.message)}};
+ rec.start();recUi(true);log("Listening… click the mic again to stop")}catch(e){log("❌ microphone not available")}}
+async function typed(t){t=t||$("cmd").value;$("cmd").value="";if(!t)return;
+ const c=await post("/api/command",{text:t});
+ if(c.action=="skill")pick(c.skill);
+ else if(c.action=="generate"||(c.action=="edit"&&!getDraft().trim())){$("ins").value=c.instruction||t;meter();gen()}
+ else if(c.action=="verify")ver();
+ else if(c.action=="export")exp();
+ else if(c.action=="delete"){if(confirm("Delete the whole draft?")){setDraft("");log("Draft deleted (Undo available).")}}
+ else{if(!confirm(`Apply this edit and overwrite the draft?\n"${c.instruction}"`))return log("Cancelled.");
+  log("Editing…");try{setDraft((await P("/api/edit",{draft:getDraft(),instruction:c.instruction})).draft);log("Edit applied.")}catch(e){log("❌ "+e.message)}}}
+
+// ---- theme ----
+function setTheme(t){document.documentElement.dataset.theme=t;try{localStorage.setItem("theme",t)}catch(e){}$("theme").innerHTML=I(t=="dark"?"sun":"moon")}
+function toggleTheme(){setTheme(document.documentElement.dataset.theme=="dark"?"light":"dark")}
+setTheme((()=>{try{return localStorage.getItem("theme")}catch(e){}})()||(matchMedia("(prefers-color-scheme:dark)").matches?"dark":"light"));
+// ---- AI providers: add keys, pick any model ----
+const PRE={Groq:["https://api.groq.com/openai/v1","llama-3.3-70b-versatile,llama-3.1-8b-instant"],OpenAI:["https://api.openai.com/v1","gpt-4o,gpt-4o-mini"],Gemini:["https://generativelanguage.googleapis.com/v1beta/openai/","gemini-2.5-flash,gemini-2.5-pro"],Anthropic:["https://api.anthropic.com/v1/","claude-sonnet-5-5,claude-haiku-5-5"],OpenRouter:["https://openrouter.ai/api/v1","anthropic/claude-sonnet-4,openai/gpt-4o"],"Ollama (local)":["http://localhost:11434/v1","llama3.1"],Custom:["",""]};
+$("pre").innerHTML=Object.keys(PRE).map(k=>`<option>${k}</option>`).join("");
+$("pre").onchange=()=>{const [u,m]=PRE[$("pre").value];$("pname").value=$("pre").value.replace(/ \(.*\)/,"");$("purl").value=u;$("pmodels").value=m};
+function openSet(){$("pre").onchange();$("pmsg").textContent="";$("set").showModal()}
+async function loadModels(){const l=await fetch("/api/models").then(r=>r.json()),keep=LS.get("model")||"";
+ $("model").innerHTML=l.map(m=>`<option value="${m.id}">${m.label}</option>`).join("");if(l.some(m=>m.id==keep))$("model").value=keep;
+ $("demo").style.display=l.some(m=>m.id!="demo")?"none":"block";const ps=[...new Set(l.map(m=>m.id.split("|")[0]))].filter(p=>p!="demo");
+ $("conn").innerHTML=ps.map(p=>`<div class="row" style="margin-bottom:6px"><span>${esc(p)}</span><span class="mu">${l.filter(m=>m.id.startsWith(p+"|")).length} models</span><span class="sp"></span><button class="g" onclick="rmProv('${p}')">Remove</button></div>`).join("")||'<div class="mu">None yet. Running in demo mode.</div>'}
+$("model").onchange=()=>LS.set("model",$("model").value);
+async function saveProv(){const b={name:$("pname").value.trim(),base_url:$("purl").value.trim(),key:$("pkey").value.trim(),models:$("pmodels").value,test:true};
+ $("pmsg").textContent="Testing connection…";const r=await post("/api/config",b).catch(e=>({ok:false,error:e.message}));
+ if(!r.ok)return $("pmsg").textContent="❌ "+r.error;
+ if($("premember").checked){const L=JSON.parse(LS.get("prov")||"[]").filter(p=>p.name!=b.name);L.push(b);LS.set("prov",JSON.stringify(L))}
+ $("pkey").value="";$("pmsg").textContent="✅ Connected. Pick it in the model dropdown.";await loadModels();
+ $("model").value=b.name+"|"+b.models.split(",")[0].trim();$("model").onchange()}
+async function rmProv(n){await post("/api/provider/remove",{name:n});LS.set("prov",JSON.stringify(JSON.parse(LS.get("prov")||"[]").filter(p=>p.name!=n)));loadModels()}
+(async()=>{for(const p of JSON.parse(LS.get("prov")||"[]"))await post("/api/config",{...p,test:false}).catch(()=>{});loadModels()})();
+// ---- similar cases: supporting / adverse authorities ----
+let SRC="prompt";$("ins").addEventListener("input",()=>SRC="prompt");paper.addEventListener("input",()=>SRC="draft");
+let CS={supporting:[],adverse:[]},cside="supporting";
+function tab(n){$("p1").style.display=n==1?"":"none";$("p2").style.display=n==2?"":"none";$("t1").classList.toggle("on",n==1);$("t2").classList.toggle("on",n==2)}
+function side(s){cside=s;$("g1").classList.toggle("on",s=="supporting");$("g2").classList.toggle("on",s=="adverse");drawCases()}
+async function findCases(){const dr=SRC=="draft"&&getDraft().trim(),t=(dr?getDraft():$("ins").value).trim()||getDraft().trim();if(!t)return log("Write an instruction or a draft first.");
+ $("cases").textContent="Searching…";try{CS=await post("/api/similar",{text:t});CS.src=dr?"your draft":"your prompt";drawCases()}catch(e){$("cases").textContent="❌ "+e.message}}
+function drawCases(){const L=CS[cside]||[];$("g1").textContent=`Supporting (${CS.supporting.length})`;$("g2").textContent=`Adverse (${CS.adverse.length})`;
+ $("cases").innerHTML=(CS.src?`<div class="mu" style="margin-bottom:8px">Searched on: ${CS.src}</div>`:"")+(cside=="adverse"?'<div class="mu" style="margin-bottom:8px">Possible authorities the other side could cite. Not exhaustive: it only searches your case file.</div>':"")+
+ (L.length?L.map((c,i)=>`<div class="cc"><b>${esc(c.name)}</b><br><span class="mu">${esc(c.cite)} · ${c.year} · ${esc(c.court)}</span>${c.reviewed?"":' <span class="tag partial">unreviewed</span>'}<p style="margin:6px 0">${esc(c.holding)}</p><div class="mu">Matched on: ${esc(c.why||"related topic")}</div><div class="row" style="margin-top:8px;flex-wrap:wrap">${cside=="adverse"?`<button onclick="distinguish(${i})">Prepare a response</button>`:`<button onclick="addCite(${i})">Insert citation</button>`}<a href="${c.link}" target="_blank" class="mu">Open source</a></div></div>`).join(""):'<div class="mu">No matches in your case file.</div>')}
+function addCite(i){const c=CS.supporting[i];setDraft(getDraft().trimEnd()+`\n\n${c.name}, ${c.cite}`);log("Citation added at the end. Click Verify citations.")}
+async function distinguish(i){const c=CS.adverse[i];log("Preparing response…");
+ try{const r=await P("/api/distinguish",{draft:getDraft(),case:c.name});
+  if(confirm("Add this paragraph to the end of the draft?\n\n"+r.text)){setDraft(getDraft().trimEnd()+"\n\n"+r.text);log("Response added. Read it and fill the [brackets] before relying on it.")}else log("Cancelled.")}catch(e){log("❌ "+e.message)}}
+// ---- voice: Whisper on the server, or the browser's own speech recognition as a fallback ----
+fetch("/api/voice").then(r=>r.json()).then(v=>{WH=v.whisper;if(!WH)log("Whisper is not installed, so voice will use the browser's speech recognition (Edge or Chrome).")}).catch(()=>{});
+function browserMic(){const SR=window.SpeechRecognition||window.webkitSpeechRecognition;if(!SR)return log("❌ This browser has no speech recognition. Use Edge or Chrome.");
+ if(window.sr){window.sr.stop();return}
+ const r=window.sr=new SR();r.lang="en-IN";r.onstart=()=>{recUi(true);log("Listening… speak now")};
+ r.onresult=e=>{const t=e.results[0][0].transcript;log("Heard: “"+t+"”");typed(t)};
+ r.onerror=e=>log("❌ speech error: "+e.error);r.onend=()=>{recUi(false);window.sr=null};r.start()}
+// ---- history (saved in this browser) ----
+let CUR=null;
+const HL=()=>{try{return JSON.parse(LS.get("hist")||"[]")}catch(e){return []}};
+function snap(){const d=getDraft();if(!d.trim())return;let L=HL(),e=L.find(x=>x.id==CUR);if(!e){CUR=Date.now();e={id:CUR};L.unshift(e)}
+ Object.assign(e,{title:($("ins").value.trim()||d.trim().split("\n")[0]).replace(/[#*]/g,"").slice(0,60),skill,draft:d,ins:$("ins").value,t:Date.now()});
+ LS.set("hist",JSON.stringify(L.slice(0,30)));histDraw()}
+function histDraw(){const L=HL().sort((a,b)=>b.t-a.t);
+ $("hist").innerHTML=L.length?L.map(e=>`<div class="it hi" onclick="histLoad(${e.id})"><span>${esc(e.title||"Untitled")}<br><span class="mu">${esc(e.skill)} · ${new Date(e.t).toLocaleDateString()}</span></span><span class="x" title="Delete" onclick="event.stopPropagation();histDel(${e.id})">×</span></div>`).join("")+'<div class="it mu" onclick="histClear()">Clear history</div>':'<div class="mu" style="padding:6px 10px">Your drafts appear here.</div>'}
+function histLoad(id){const e=HL().find(x=>x.id==id);if(!e)return;closeTool();CUR=e.id;pick(e.skill);$("ins").value=e.ins||"";meter();hist.push(getDraft());setPaper(e.draft);clearMarks();sync();log("Restored: "+e.title)}
+function histDel(id){LS.set("hist",JSON.stringify(HL().filter(x=>x.id!=id)));if(CUR==id)CUR=null;histDraw()}
+function histClear(){if(confirm("Delete all saved drafts from this browser?")){LS.set("hist","[]");CUR=null;histDraw()}}
+histDraw();
+
+// ---- tools: Correction Review and Translate ----
+let TOOL="",TRES="";
+const TOOLS={correct:{t:"Correction Review",d:"Upload a PDF, PPT, DOCX or image. DraftMate reviews it as a lawyer would: what is there, what is missing and what to fix.",o:["Auto-detect","Rent / lease agreement","Legal notice","Petition / application","Contract / MoU","NDA","Affidavit","Employment agreement","Consumer complaint"],run:"Review"},
+ translate:{t:"Translate a document",d:"Upload a PDF, PPT, DOCX, TXT or image and get it in another language. Headings, names, numbers and citations are kept. A lawyer should review legal translations.",o:["Hindi","English","Bengali","Marathi","Tamil","Telugu","Gujarati","Kannada","Malayalam","Punjabi","Urdu","Odia"],run:"Translate"}};
+const TIT=[["Correction","Correction Review","correct"],["Plain language & study","Translate a document","translate"]];
+function addTools(){const f=$("q").value.toLowerCase();
+ TIT.forEach(([cat,name,id])=>{if(f&&!name.toLowerCase().includes(f))return;
+  let d=[...document.querySelectorAll("#skills details")].find(x=>x.querySelector("summary").textContent==cat);
+  if(!d){d=document.createElement("details");d.open=true;d.innerHTML=`<summary>${cat}</summary>`;$("skills").prepend(d)}
+  if(f)d.open=true;d.insertAdjacentHTML("beforeend",`<div class="it ${TOOL==id?"on":""}" data-s="tool:${id}" onclick="openTool('${id}')">${name}</div>`)})}
+function openTool(id){TOOL=id;const T=TOOLS[id];$("ttitle").textContent=T.t;$("tdesc").textContent=T.d;$("topt").innerHTML=T.o.map(x=>`<option>${x}</option>`).join("");$("trun").innerHTML=I("send")+T.run;
+ $("tout").innerHTML="";$("tact").style.display="none";document.querySelector(".compose").style.display="none";doc.style.display="none";$("toolview").style.display="block";
+ document.querySelectorAll("#skills .it").forEach(e=>e.classList.toggle("on",e.dataset.s=="tool:"+id))}
+function closeTool(){if(!TOOL)return;TOOL="";$("toolview").style.display="none";document.querySelector(".compose").style.display="";doc.style.display=""}
+$("tfile").onchange=()=>$("tname").textContent=$("tfile").files[0]?$("tfile").files[0].name:"PDF, PPTX, DOCX, TXT or image";
+async function runTool(){const f=$("tfile").files[0],t=$("tpaste").value.trim();if(!f&&!t)return log("Choose a file or paste text first.");
+ const fd=new FormData();if(f)fd.append("file",f);fd.append("text",t);fd.append("option",$("topt").value);fd.append("model",$("model").value);
+ $("tout").innerHTML='<div class="mu">Working… large files can take a minute.</div>';$("tact").style.display="none";
+ try{const r=await (await fetch("/api/"+(TOOL=="correct"?"correct":"translate"),{method:"POST",body:fd})).json();
+  if(r.error){$("tout").innerHTML=`<div class="banner">❌ ${esc(r.error)}</div>`;return}
+  TRES=r.markdown;$("tout").innerHTML=TOOL=="correct"?report(r):`<div class="pp">${render(r.markdown)}</div>`;$("tact").style.display="flex"}
+ catch(e){$("tout").innerHTML=`<div class="banner">❌ ${esc(e.message)}</div>`}}
+function report(r){const li=(a,f)=>a.length?a.map(f).join(""):'<div class="mu">None found.</div>',E=x=>esc(x||"");
+ return `<div class="cc"><b>${E(r.doc_type)}</b><p>${E(r.summary)}</p></div>
+ <div class="two"><div class="cc"><h3>What is there (${r.present.length})</h3>${li(r.present,p=>`<div class="ri"><span class="tag verified">present</span> ${E(p.item)}<div class="mu">${E(p.evidence)}</div></div>`)}</div>
+ <div class="cc"><h3>What is missing (${r.missing.length})</h3>${li(r.missing,m=>`<div class="ri"><span class="tag unverified">missing</span> ${E(m.item)}<div class="mu">${E(m.why)}</div><div>${E(m.suggestion)}</div></div>`)}</div></div>
+ <div class="cc"><h3>Corrections to consider (${r.issues.length})</h3>${li(r.issues,x=>`<div class="ri"><span class="tag partial">fix</span> ${E(x.problem)}<div class="mu">“${E(x.text)}”</div><div>${E(x.fix)}</div></div>`)}</div><p class="mu">${E(r.note)}</p>`}
+function toolToDraft(){closeTool();CUR=null;setDraft(TRES)}
+async function dl(md,name){const r=await fetch("/api/export",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({draft:md})});
+ const a=document.createElement("a");a.href=URL.createObjectURL(await r.blob());a.download=name;a.click()}
+sync();
+</script></body></html>

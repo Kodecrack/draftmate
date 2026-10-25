@@ -1,0 +1,12 @@
+fastapi
+uvicorn
+python-multipart
+openai
+python-dotenv
+rank-bm25
+python-docx
+requests
+pypdf
+faster-whisper
+python-pptx
+rapidocr-onnxruntime
