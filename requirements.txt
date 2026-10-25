@@ -7,7 +7,6 @@ rank-bm25
 python-docx
 requests
 pypdf
-faster-whisper
+
 python-pptx
-rapidocr-onnxruntime
-requirements-cloud.txt
+
