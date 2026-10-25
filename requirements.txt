@@ -10,3 +10,4 @@ pypdf
 faster-whisper
 python-pptx
 rapidocr-onnxruntime
+requirements-cloud.txt

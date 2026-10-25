@@ -4,8 +4,10 @@ from pathlib import Path
 from urllib.parse import quote
 import requests
 from dotenv import load_dotenv
-from fastapi import FastAPI, UploadFile, File, Form
-from fastapi.responses import StreamingResponse
+import time, uuid
+from collections import defaultdict, deque
+from fastapi import FastAPI, UploadFile, File, Form, Request
+from fastapi.responses import StreamingResponse, JSONResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel
 from openai import OpenAI
@@ -66,20 +68,27 @@ def models():
 
 @app.post("/api/config")
 def config(b: dict):
+    if PUBLIC: return {"ok": False, "error": "Disabled on the public site."}
     name = re.sub(r"[^\w -]", "", b.get("name", ""))[:30].strip() or "custom"
     models = [m.strip() for m in b.get("models", "").split(",") if m.strip()]
     if not models: return {"ok": False, "error": "Add at least one model name"}
-    add_provider(name, b.get("base_url"), b.get("key"), models)
+    old = PROV.get(name)
+    reuse = old and not b.get("key") and (not b.get("base_url") or str(old["client"].base_url).rstrip("/") == b["base_url"].rstrip("/"))
+    prev = old["models"] if reuse else None
+    if reuse: old["models"] = models   # blank key on a saved provider: keep its stored key, change models only
+    else: add_provider(name, b.get("base_url"), b.get("key"), models)
     if b.get("test", True):
         try:
             PROV[name]["client"].chat.completions.create(model=models[0], max_tokens=5, messages=[{"role": "user", "content": "ping"}])
         except Exception as e:
-            del PROV[name]
+            if reuse: old["models"] = prev
+            else: del PROV[name]
             return {"ok": False, "error": str(e)[:200]}
     return {"ok": True}
 
 @app.post("/api/provider/remove")
 def remove_provider(b: dict):
+    if PUBLIC: return {"ok": False, "error": "Disabled on the public site."}
     PROV.pop(b.get("name"), None)
     return {"ok": True}
 
@@ -90,16 +99,31 @@ def improve(b: dict):
               f"Request: {b['instruction']}\nMissing details to cover: {miss}", f"{b['instruction']} Also specify: {miss}.", b.get("model") or None)
     return {"instruction": out}
 
+SKIP = ("whisper", "tts", "embed", "dall-e", "moderation", "guard", "audio", "transcribe", "realtime", "image", "babbage", "davinci", "rerank")
+
+@app.post("/api/provider/models")
+def provider_models(b: dict):
+    if PUBLIC: return {"ok": False, "error": "Disabled on the public site."}
+    # ask the provider which models this key can use
+    try:
+        if not b.get("key") and b.get("name") in PROV: c = PROV[b["name"]]["client"]
+        else: c = OpenAI(api_key=b.get("key") or "none", base_url=b.get("base_url") or None, timeout=15)
+        ids = sorted({m.id.removeprefix("models/") for m in c.models.list()})
+    except Exception as e:
+        return {"error": "Could not fetch the list (" + str(e)[:120] + "). Type the model names instead."}
+    return {"models": [i for i in ids if not any(x in i.lower() for x in SKIP)]}
+
 @app.post("/api/upload")
-async def upload(file: UploadFile = File(...)):
+async def upload(request: Request, file: UploadFile = File(...)):
+    S = sess(request)
     with tempfile.NamedTemporaryFile(delete=False, suffix=Path(file.filename).suffix) as t:
         t.write(await file.read())
     md = to_markdown(t.name)
     os.unlink(t.name)
     chunks = [c.strip() for c in re.split(r"\n\s*\n", md) if len(c.strip()) > 40]
-    STORE.update(chunks=chunks, raw=len(md), bm25=BM25Okapi([tok(c) for c in chunks]) if chunks else None)
-    STORE["style"] = llm("Analyse this legal document's drafting style in 6 bullets: tone, structure, numbering, clause patterns, terminology, formatting.", md[:4000], "Formal tone; numbered paragraphs (demo).")
-    return {"chunks": len(chunks), "style": STORE["style"]}
+    S.update(chunks=chunks, raw=len(md), bm25=BM25Okapi([tok(c) for c in chunks]) if chunks else None)
+    S["style"] = llm("Analyse this legal document's drafting style in 6 bullets: tone, structure, numbering, clause patterns, terminology, formatting.", md[:4000], "Formal tone; numbered paragraphs (demo).")
+    return {"chunks": len(chunks), "style": S["style"]}
 
 class Gen(BaseModel):
     skill: str
@@ -107,16 +131,17 @@ class Gen(BaseModel):
     model: str = ""
 
 @app.post("/api/generate")
-def generate(g: Gen):
+def generate(g: Gen, request: Request):
+    S = sess(request)
     ctx = ""
-    if STORE["bm25"]:                       # token management: only top-4 relevant chunks
-        sc = STORE["bm25"].get_scores(tok(g.instruction))
+    if S["bm25"]:                       # token management: only top-4 relevant chunks
+        sc = S["bm25"].get_scores(tok(g.instruction))
         top = sorted(sorted(range(len(sc)), key=lambda i: -sc[i])[:4])
-        ctx = "\n\n".join(STORE["chunks"][i] for i in top)
+        ctx = "\n\n".join(S["chunks"][i] for i in top)
     system = SKILLS.get(g.skill, "") + RULES
-    if STORE["style"]: system += "\nMatch this STYLE PROFILE:\n" + STORE["style"]
+    if S["style"]: system += "\nMatch this STYLE PROFILE:\n" + S["style"]
     prompt = (f"Reference excerpts:\n{ctx}\n\n" if ctx else "") + "Task: " + g.instruction
-    return {"draft": llm(system, prompt, DEMO, g.model or None), "tokens": {"full": STORE["raw"] // 4, "sent": len(ctx) // 4}}
+    return {"draft": llm(system, prompt, DEMO, g.model or None), "tokens": {"full": S["raw"] // 4, "sent": len(ctx) // 4}}
 
 @app.post("/api/edit")
 def edit(b: dict):
@@ -233,6 +258,37 @@ def distinguish(b: dict):
               b.get("model") or None)
     return {"text": out}
 
+# ---------- Public launch safety ----------
+PUBLIC = os.getenv("PUBLIC_MODE", "") == "1"   # set PUBLIC_MODE=1 on a public server
+HITS = defaultdict(deque)
+LIMITED = ("/api/generate", "/api/edit", "/api/improve", "/api/distinguish", "/api/correct", "/api/translate", "/api/upload", "/api/command", "/api/transcribe")
+SESS = {}   # one private reference-document store per visitor (cookie "sid")
+
+def sess(request):
+    sid = request.cookies.get("sid", "")
+    if not sid: return {"chunks": [], "bm25": None, "raw": 0, "style": ""}
+    if sid not in SESS:
+        if len(SESS) > 200: SESS.pop(next(iter(SESS)))
+        SESS[sid] = {"chunks": [], "bm25": None, "raw": 0, "style": ""}
+    return SESS[sid]
+
+@app.middleware("http")
+async def guard(request: Request, call_next):
+    if request.url.path in LIMITED:
+        ip = request.headers.get("x-forwarded-for", request.client.host).split(",")[0].strip()
+        q, now = HITS[ip], time.time()
+        while q and now - q[0] > 3600: q.popleft()
+        if len(q) >= int(os.getenv("RATE_PER_HOUR", "30")):
+            return JSONResponse({"detail": "Rate limit reached. Please try again in a while."}, status_code=429)
+        q.append(now)
+    resp = await call_next(request)
+    if "sid" not in request.cookies:
+        resp.set_cookie("sid", uuid.uuid4().hex, httponly=True, samesite="lax", max_age=86400 * 30)
+    return resp
+
+@app.get("/api/public")
+def public_flag(): return {"public": PUBLIC}
+
 # ---------- Document tools: Correction Review + Translate ----------
 _ocr = None
 
@@ -258,13 +314,16 @@ def read_any(path):
                 if sl.has_notes_slide: out.append("Notes: " + sl.notes_slide.notes_text_frame.text)
             return "\n\n".join(out)
     except ImportError:
+        if PUBLIC: raise RuntimeError("This file type is not enabled on the public site.")
         raise RuntimeError("Reading " + ext + " files needs a package. Run: python -m pip install " + ("python-pptx" if ext == ".pptx" else "rapidocr-onnxruntime"))
     return to_markdown(path)
 
 async def get_text(file, text):
     if file is not None and file.filename:
         with tempfile.NamedTemporaryFile(delete=False, suffix=Path(file.filename).suffix) as t:
-            t.write(await file.read())
+            data = await file.read()
+            if len(data) > 10_000_000: raise RuntimeError("File too large (10 MB maximum).")
+            t.write(data)
         try: return read_any(t.name)
         finally: os.unlink(t.name)
     return text

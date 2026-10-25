@@ -52,14 +52,29 @@ dialog input:not([type=checkbox]),dialog select{width:100%;margin:3px 0 8px}dial
 .two{display:grid;grid-template-columns:1fr 1fr;gap:10px}.ri{padding:7px 0;border-bottom:1px solid var(--ln);font-size:13px}.cc h3{color:var(--tx);font-size:14px;margin:0 0 6px}
 .pp{background:var(--paper);color:var(--ptx);font:15px/1.8 "Times New Roman",Georgia,serif;white-space:pre-wrap;padding:40px 48px;border:1px solid var(--ln);border-radius:6px;box-shadow:var(--sh)}
 .hi{display:flex;justify-content:space-between;align-items:center;gap:8px}.x{color:var(--mu);padding:0 6px}.x:hover{color:var(--rdc)}
+.mb{display:none}
+@media(max-width:900px){
+ header{flex-wrap:wrap;height:auto;padding:8px 12px;gap:8px;position:relative;z-index:30;background:var(--bg)}
+ header select{max-width:46vw}.mb{display:inline-flex!important}
+ .app{display:block;height:auto}
+ aside{position:fixed;left:0;top:var(--hh,53px);bottom:0;width:86%;max-width:330px;z-index:20;transform:translateX(-105%);transition:transform .2s;box-shadow:0 0 30px #0007}
+ aside.r{left:auto;right:0;transform:translateX(105%)}
+ aside.open{transform:none}
+ main{padding:12px;overflow:visible}
+ .tb{top:0;flex-wrap:wrap}
+ #paper{padding:24px 18px;min-height:60vh}
+ .two{grid-template-columns:1fr}
+ .cbar{gap:6px}.refine{flex-wrap:wrap}
+}
 </style></head><body>
-<header><span data-ic="scale" style="color:var(--ac)"></span><b>DraftMate</b><span class="mu">Legal Drafting Studio</span><span class="sp"></span>
-<select id="model" title="Model"></select><button class="g" onclick="openSet()" data-ic="sliders">AI settings</button><button class="g" id="theme" onclick="toggleTheme()" title="Light / dark"></button></header>
+<header><button class="g mb" onclick="drawer('l')" data-ic="menu" title="Menu"></button><span data-ic="scale" style="color:var(--ac)"></span><b>DraftMate</b><span class="mu">Legal Drafting Studio</span><span class="sp"></span>
+<select id="model" title="Model"></select><button class="g" onclick="openSet()" data-ic="sliders">AI settings</button><button class="g mb" onclick="drawer('r')" data-ic="panel" title="Citations and cases"></button><button class="g" id="theme" onclick="toggleTheme()" title="Light / dark"></button></header>
 <div class="app">
  <aside><details><summary>History</summary><div id="hist"></div></details><h3 style="margin-top:14px">Skills</h3><input id="q" placeholder="Search skills…" style="margin-bottom:8px"><div id="skills"></div>
   <details style="margin-top:10px"><summary>Templates</summary><div id="tpl"></div></details></aside>
  <main>
   <div id="demo" class="banner" style="display:none">No AI is connected, so every draft is the same sample text. <a href="#" onclick="openSet();return false">Connect an AI</a></div>
+  <div id="pub" class="banner" style="display:none">Public demo: please do not upload confidential client documents. Text is sent to an AI provider, and all output must be reviewed by a lawyer.</div>
   <section class="compose">
    <textarea id="ins" rows="2" placeholder="Describe what you want to draft, e.g. a rent default notice for a Lucknow flat, Rs. 15,000 per month, 3 months unpaid…"></textarea>
    <div class="cbar">
@@ -104,7 +119,9 @@ dialog input:not([type=checkbox]),dialog select{width:100%;margin:3px 0 8px}dial
 <label class="mu">Provider</label><select id="pre"></select>
 <label class="mu">Name</label><input id="pname"><label class="mu">Base URL</label><input id="purl">
 <label class="mu">API key (not needed for Ollama)</label><input id="pkey" type="password" placeholder="paste your key">
-<label class="mu">Models, comma separated (edit to match your provider's current names)</label><input id="pmodels">
+<label class="mu">Models for the dropdown</label>
+<div class="row"><input id="pmodels" placeholder="click Fetch models, or type names separated by commas" style="margin:3px 0 8px"><button class="g" onclick="fetchModels()" style="white-space:nowrap;margin-bottom:8px">Fetch models</button></div>
+<div id="mbox" style="display:none"><input id="mfilter" placeholder="Filter models…" oninput="drawModelBox()"><div id="mlist" style="max-height:150px;overflow:auto;border:1px solid var(--ln);border-radius:8px;padding:6px;margin-bottom:8px"></div></div>
 <label class="mu"><input type="checkbox" id="premember" checked> Remember on this device (saved in this browser, in plain text)</label>
 <div class="row" style="margin-top:10px"><button onclick="saveProv()">Save and test</button><button class="g" onclick="$('set').close()">Close</button></div>
 <div id="pmsg" class="mu" style="margin-top:8px"></div><h3 style="margin-top:16px">Connected</h3><div id="conn"></div></dialog>
@@ -114,7 +131,7 @@ const ic={scale:'<path d="m16 16 3-8 3 8c-.87.65-1.92 1-3 1s-2.13-.35-3-1Z"/><pa
 shield:'<path d="M20 13c0 5-3.5 7.5-7.66 8.95a1 1 0 0 1-.67-.01C7.5 20.5 4 18 4 13V6a1 1 0 0 1 1-1c2 0 4.5-1.2 6.24-2.72a1.17 1.17 0 0 1 1.52 0C14.51 3.81 17 5 19 5a1 1 0 0 1 1 1z"/><path d="m9 12 2 2 4-4"/>',
 mic:'<path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"/><path d="M19 10v2a7 7 0 0 1-14 0v-2"/><line x1="12" x2="12" y1="19" y2="22"/>',
 down:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" x2="12" y1="15" y2="3"/>',
-undo:'<path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>',check:'<polyline points="20 6 9 17 4 12"/>',play:'<polygon points="6 3 20 12 6 21 6 3"/>',
+undo:'<path d="M3 7v6h6"/><path d="M21 17a9 9 0 0 0-9-9 9 9 0 0 0-6 2.3L3 13"/>',check:'<polyline points="20 6 9 17 4 12"/>',menu:'<line x1="4" x2="20" y1="12" y2="12"/><line x1="4" x2="20" y1="6" y2="6"/><line x1="4" x2="20" y1="18" y2="18"/>',panel:'<rect width="18" height="18" x="3" y="3" rx="2"/><path d="M15 3v18"/>',play:'<polygon points="6 3 20 12 6 21 6 3"/>',
 sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2m-7.07-2.93 1.41-1.41M17.66 6.34l1.41-1.41M2 12h2M20 12h2M4.93 4.93l1.41 1.41m11.32 11.32 1.41 1.41"/>',moon:'<path d="M12 3a6 6 0 0 0 9 9 9 9 0 1 1-9-9Z"/>',
 clip:'<path d="m21.44 11.05-9.19 9.19a6 6 0 0 1-8.49-8.49l8.57-8.57A4 4 0 1 1 18 8.84l-8.59 8.57a2 2 0 0 1-2.83-2.83l8.49-8.48"/>',
 send:'<path d="m5 12 7-7 7 7"/><path d="M12 19V5"/>',sliders:'<line x1="21" x2="14" y1="4" y2="4"/><line x1="10" x2="3" y1="4" y2="4"/><line x1="21" x2="12" y1="12" y2="12"/><line x1="8" x2="3" y1="12" y2="12"/><line x1="21" x2="16" y1="20" y2="20"/><line x1="12" x2="3" y1="20" y2="20"/><line x1="14" x2="14" y1="2" y2="6"/><line x1="8" x2="8" y1="10" y2="14"/><line x1="16" x2="16" y1="18" y2="22"/>',trend:'<path d="M3 17l6-6 4 4 8-8"/><path d="M14 7h7v7"/>'};
@@ -196,7 +213,7 @@ function score(){const n=s=>RES.filter(r=>r.status==s).length,v=n("verified"),p=
  $("seg").innerHTML=[[v,"#3f8f5f"],[p,"#c98a1b"],[u,"#c2453b"]].map(([k,c])=>`<div style="width:${k*100/t}%;background:${c}"></div>`).join("");
  $("cnt").textContent=`${v} verified · ${p} partial · ${u} unverified`;
  const t0=performance.now();(function f(now){const k=Math.min((now-t0)/900,1);$("score").textContent=Math.round(pct*k)+"%";if(k<1)requestAnimationFrame(f)})(t0)}
-async function show(i){const r=RES[i];
+async function show(i){const r=RES[i];if(innerWidth<=900){document.querySelectorAll("aside").forEach(x=>x.classList.remove("open"));document.querySelector("aside.r").classList.add("open")}
  $("detail").innerHTML=`<h3 style="margin-top:16px;color:var(--tx);font-size:14px">${esc(r.cite)}</h3><span class="tag ${r.status}">${r.status}</span><p class="mu">${esc(r.note)}</p>`+(r.fix?`<button onclick="applyFix(${i})">${I("check")} Insert correct case name</button>`:"")+`<div id="snip" class="mu" style="margin-top:8px">Looking up Indian Kanoon…</div><p><a href="${r.link}" target="_blank">Open source</a></p>`;
  const s=await fetch("/api/snippet?cite="+encodeURIComponent(r.cite)).then(x=>x.json()).catch(()=>({}));
  if($("snip"))$("snip").innerHTML=s.title?`<b>${esc(s.title)}</b><br>${esc(s.snippet)}`:"No live snippet found. Use the source link to check manually."}
@@ -234,10 +251,11 @@ setTheme((()=>{try{return localStorage.getItem("theme")}catch(e){}})()||(matchMe
 // ---- AI providers: add keys, pick any model ----
 const PRE={Groq:["https://api.groq.com/openai/v1","llama-3.3-70b-versatile,llama-3.1-8b-instant"],OpenAI:["https://api.openai.com/v1","gpt-4o,gpt-4o-mini"],Gemini:["https://generativelanguage.googleapis.com/v1beta/openai/","gemini-2.5-flash,gemini-2.5-pro"],Anthropic:["https://api.anthropic.com/v1/","claude-sonnet-5-5,claude-haiku-5-5"],OpenRouter:["https://openrouter.ai/api/v1","anthropic/claude-sonnet-4,openai/gpt-4o"],"Ollama (local)":["http://localhost:11434/v1","llama3.1"],Custom:["",""]};
 $("pre").innerHTML=Object.keys(PRE).map(k=>`<option>${k}</option>`).join("");
-$("pre").onchange=()=>{const [u,m]=PRE[$("pre").value];$("pname").value=$("pre").value.replace(/ \(.*\)/,"");$("purl").value=u;$("pmodels").value=m};
+$("pre").onchange=()=>{const [u,m]=PRE[$("pre").value];$("pname").value=$("pre").value.replace(/ \(.*\)/,"");$("purl").value=u;$("pmodels").value=m;$("mbox").style.display="none"};
 function openSet(){$("pre").onchange();$("pmsg").textContent="";$("set").showModal()}
 async function loadModels(){const l=await fetch("/api/models").then(r=>r.json()),keep=LS.get("model")||"";
- $("model").innerHTML=l.map(m=>`<option value="${m.id}">${m.label}</option>`).join("");if(l.some(m=>m.id==keep))$("model").value=keep;
+ const gs={};l.forEach(m=>(gs[m.id.split("|")[0]]=gs[m.id.split("|")[0]]||[]).push(m));
+ $("model").innerHTML=Object.entries(gs).map(([g,a])=>`<optgroup label="${esc(g)}">${a.map(m=>`<option value="${m.id}">${esc(m.label)}</option>`).join("")}</optgroup>`).join("");if(l.some(m=>m.id==keep))$("model").value=keep;
  $("demo").style.display=l.some(m=>m.id!="demo")?"none":"block";const ps=[...new Set(l.map(m=>m.id.split("|")[0]))].filter(p=>p!="demo");
  $("conn").innerHTML=ps.map(p=>`<div class="row" style="margin-bottom:6px"><span>${esc(p)}</span><span class="mu">${l.filter(m=>m.id.startsWith(p+"|")).length} models</span><span class="sp"></span><button class="g" onclick="rmProv('${p}')">Remove</button></div>`).join("")||'<div class="mu">None yet. Running in demo mode.</div>'}
 $("model").onchange=()=>LS.set("model",$("model").value);
@@ -313,5 +331,19 @@ function report(r){const li=(a,f)=>a.length?a.map(f).join(""):'<div class="mu">N
 function toolToDraft(){closeTool();CUR=null;setDraft(TRES)}
 async function dl(md,name){const r=await fetch("/api/export",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({draft:md})});
  const a=document.createElement("a");a.href=URL.createObjectURL(await r.blob());a.download=name;a.click()}
+// ---- fetch the provider's real model list and tick the ones you want ----
+let FM=[];
+async function fetchModels(){$("pmsg").textContent="Fetching models…";
+ const r=await post("/api/provider/models",{name:$("pname").value.trim(),base_url:$("purl").value.trim(),key:$("pkey").value.trim()}).catch(e=>({error:e.message}));
+ if(r.error)return $("pmsg").textContent="❌ "+r.error;
+ FM=r.models;$("mbox").style.display="block";$("mfilter").value="";drawModelBox();$("pmsg").textContent=`Found ${FM.length} models. Tick the ones you want, then click Save and test.`}
+function drawModelBox(){const f=$("mfilter").value.toLowerCase(),sel=new Set($("pmodels").value.split(",").map(x=>x.trim()).filter(Boolean));
+ $("mlist").innerHTML=FM.filter(m=>m.toLowerCase().includes(f)).slice(0,300).map(m=>`<label style="display:flex;gap:8px;align-items:center;padding:2px 0"><input type="checkbox" data-m="${esc(m)}" ${sel.has(m)?"checked":""} onchange="pickModel(this.dataset.m,this.checked)" style="width:auto;margin:0">${esc(m)}</label>`).join("")||'<div class="mu">No match.</div>'}
+function pickModel(m,on){const s=$("pmodels").value.split(",").map(x=>x.trim()).filter(Boolean).filter(x=>x!=m);if(on)s.push(m);$("pmodels").value=s.join(",")}
+// ---- phone layout: sidebars become slide-in drawers ----
+function drawer(w){const a=document.querySelector(w=="l"?"aside:not(.r)":"aside.r"),o=a.classList.contains("open");document.querySelectorAll("aside").forEach(x=>x.classList.remove("open"));if(!o)a.classList.add("open")}
+document.addEventListener("click",e=>{if(innerWidth<=900&&e.target.closest("aside:not(.r) .it"))document.querySelector("aside:not(.r)").classList.remove("open")});
+const hh=()=>document.documentElement.style.setProperty("--hh",document.querySelector("header").offsetHeight+"px");hh();addEventListener("resize",hh);
+fetch("/api/public").then(r=>r.json()).then(v=>{if(v.public){$("pub").style.display="block";document.querySelector('[onclick="openSet()"]').style.display="none"}}).catch(()=>{});
 sync();
 </script></body></html>
